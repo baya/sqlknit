@@ -4,6 +4,7 @@ module SQLKnit
 
     def initialize
       @sql_select = SQL::Select.new
+      @sql_from   = SQL::From.new
     end
 
     def sql_select &block
@@ -11,6 +12,7 @@ module SQLKnit
     end
 
     def sql_from table_name, &block
+      @sql_from.instance_eval &block
     end
 
     def select_statement
@@ -19,3 +21,4 @@ module SQLKnit
 
   end
 end
+
