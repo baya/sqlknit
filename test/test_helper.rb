@@ -1,4 +1,4 @@
-require 'test/unit'
+require 'minitest/autorun'
 
 test_dir = File.dirname(__FILE__)
 $:.unshift test_dir if not $:.include? test_dir

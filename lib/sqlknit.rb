@@ -1,3 +1,8 @@
+require 'bundler/setup'
+require 'active_support'
+require 'active_support/core_ext'
 require 'sql/select'
+require 'sql/on_condition'
+require 'sql/join'
 require 'sql/from'
 require 'needle'
