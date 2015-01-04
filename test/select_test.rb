@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class SelectStatementTest < Test::Unit::TestCase
+class SelectStatementTest < MiniTest::Test
 
   def setup
     @needle = SQLKnit::Needle.new
