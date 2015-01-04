@@ -117,6 +117,43 @@ join products_taxons on products_taxons.product_id = products.id"
     assert_equal @needle.from_statement, statement
   end
 
+  def test_join_single_table_on_text
+    @needle.sql_from :orders do
+      join(:line_items).on "line_items.order_id = orders.id"
+    end
+
+    statement = "from orders join line_items on line_items.order_id = orders.id"
+    assert_equal @needle.from_statement, statement
+  end
+
+  def test_join_single_table_on_text_in_a_block
+    @needle.sql_from :orders do
+      join(:line_items).on do
+        text "line_items.order_id = orders.id"
+      end
+    end
+
+    statement = "from orders join line_items on line_items.order_id = orders.id"
+
+    assert_equal @needle.from_statement, statement
+  end
+
+  def test_join_table_on_table_attributes
+    @needle.sql_from :orders do
+      join(:line_items).on :orders
+      join(:state_events).on do
+        text "state_events.stateful_id = orders.id"
+        sql_and
+        state_events name: 'payment', stateful_type: 'Order', next_state: ['paid', 'credit_owed']
+      end
+    end
+
+    statement = "from orders join line_items on line_items.order_id = orders.id
+join state_events on state_events.stateful_id = orders.id and state_events.name = 'payment' and state_events.stateful_type = 'Order' and state_events.next_state in ('paid','credit_owed')"
+
+    assert_equal @needle.from_statement, statement
+    
+  end
 
   # def test_from
     

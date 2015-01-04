@@ -18,18 +18,15 @@ module SQLKnit
       def on table_name_or_text = nil, &block
         if table_name_or_text.is_a? Symbol
           @on_table_name = table_name_or_text
-        elsif table_name_or_text.to_s.include? "="
-          text = table_name_or_text
         else
-          @on_table_name = table_name_or_text
+          text = table_name_or_text
         end
 
-        on_condition = OnCondition.new join_table_name, on_table_name, text
+        on_condition = OnCondition.new join_table_name, on_table_name
+        on_condition.add_text text if text
+        
         on_conditions << on_condition
-        instance_eval &block if block_given?
-      end
-
-      def text str
+        on_condition.instance_eval &block if block_given?
       end
 
       def to_statement
@@ -41,7 +38,6 @@ module SQLKnit
         [type, statement].join(" ")
       end
 
-      
     end
   end
 end
