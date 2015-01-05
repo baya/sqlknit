@@ -155,6 +155,22 @@ join state_events on state_events.stateful_id = orders.id and state_events.name 
     
   end
 
+  def test_left_join
+    @needle.sql_from :orders do
+      left_join(:line_items).on :orders
+      left_join(:state_events).on do
+        text "state_events.stateful_id = orders.id"
+        sql_and
+        state_events name: 'payment', stateful_type: 'Order', next_state: ['paid', 'credit_owed']
+      end
+    end
+
+    statement = "from orders left join line_items on [:line_items].order_id = orders.id
+left join state_events on state_events.stateful_id = orders.id and state_events.name = 'payment' and state_events.stateful_type = 'Order' and state_events.next_state in ('paid','credit_owed')"
+
+    assert_equal @needle.from_statement, statement
+  end
+
   # def test_from
     
   #   @needle.sql_from :orders do

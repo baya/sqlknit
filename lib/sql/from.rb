@@ -3,6 +3,7 @@ module SQLKnit
     class From
 
       attr_reader :statement_chains, :current_chain, :current_table_name
+      attr_reader :current_join_type
       
       def initialize
         @statement_chains = Hash.new {|hash, key| hash[key] = []}
@@ -18,7 +19,8 @@ module SQLKnit
       end
       
       def join table_name
-        join = SQL::Join.new(current_table_name, table_name)
+        opts = {type: current_join_type}
+        join = SQL::Join.new(current_table_name, table_name, opts)
         current_chain << join
         join
       end
@@ -26,6 +28,7 @@ module SQLKnit
       alias_method :join_chain, :join
 
       def join *table_names
+        
         if table_names.size > 1
           table_name_paires = pairelize_table_names table_names
           table_name_paires.unshift [current_table_name, table_names.first]
@@ -40,13 +43,14 @@ module SQLKnit
         current_chain.last
       end
 
+      def left_join *table_names
+        switch_join_type 'left join'
+        join table_names
+      end
+
       def pairelize_table_names table_names
         last_index = table_names.length - 1
         (0..(last_index-1)).map {|i| table_names[i..i+1] }
-      end
-
-      def left_join table_name
-        Join.new(table_name, type: 'left join')
       end
 
       def to_statement
@@ -67,6 +71,10 @@ module SQLKnit
 
       private
 
+      def switch_join_type type
+        @current_join_type = type
+      end
+      
       def switch_to table_name
         @current_table_name = table_name
         @current_chain = @statement_chains[table_name]
