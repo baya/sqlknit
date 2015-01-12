@@ -12,7 +12,7 @@ module SQLKnit
       def contextlize table_name, &block
         switch_to table_name
         instance_eval &block if block_given?
-      end  
+      end
 
       def text str
         statement_chains << str if not statement_chains.include? str

@@ -2,7 +2,7 @@ class OnCondition
 
   attr_reader :join_table_name, :on_table_name, :texts, :current_logic_op
 
-  def initialize join_table_name, on_table_name
+  def initialize join_table_name, on_table_name = nil
     @join_table_name = join_table_name
     @on_table_name   = on_table_name
     @texts = []

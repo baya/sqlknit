@@ -2,6 +2,8 @@ module SQLKnit
   module SQL
     class Join
 
+      TableAbbrSymbol = ':'
+
       attr_reader :head_table_name, :join_table_name, :on_table_name
       attr_reader :type
       attr_reader :on_conditions
@@ -15,26 +17,23 @@ module SQLKnit
         @statement_chains = []
       end
 
-      def on table_name_or_text = nil, &block
-        if table_name_or_text.is_a? Symbol
-          @on_table_name = table_name_or_text
-        else
-          text = table_name_or_text
-        end
+      def on text = nil, &block
 
-        on_condition = OnCondition.new join_table_name, on_table_name
-        on_condition.add_text text if text
+        if text.include? TableAbbrSymbol
+          join_text = text.gsub(TableAbbrSymbol, join_table_name.to_s)
+        else
+          join_text = text
+        end
+        
+        on_condition = OnCondition.new join_table_name
+        on_condition.add_text join_text
         
         on_conditions << on_condition
         on_condition.instance_eval &block if block_given?
       end
 
       def to_statement
-        if on_conditions.size == 0
-          on_conditions << OnCondition.new(join_table_name, head_table_name)
-        end
         statement = on_conditions.map(&:to_statement).join("\n")
-        
         [type, statement].join(" ")
       end
 

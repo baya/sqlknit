@@ -1,19 +1,29 @@
 require 'test_helper'
 
-class FromStatementTest < MiniTest::Test
+class JoinStatementTest < MiniTest::Test
 
   def setup
     @needle = SQLKnit::Needle.new
   end
 
-  def test_from_single_table_01
-    @needle.sql_from :orders do
+  def test_join_on_text
+    @needle.from :orders do
       join(:line_items).on('line_items.order_id = orders.id')
     end
     statement = "from orders join line_items on line_items.order_id = orders.id"
     
     assert_equal @needle.from_statement, statement
   end
+
+  def test_join_on_text_with_placeholder
+    @needle.from :orders do
+      join(:line_items).on(':.order_id = orders.id')
+    end
+    statement = "from orders join line_items on line_items.order_id = orders.id"
+    
+    assert_equal @needle.from_statement, statement
+  end
+
 
 #   def test_from_single_table_without_join
 #     @needle.sql_from :orders do

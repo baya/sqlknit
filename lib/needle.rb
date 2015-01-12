@@ -7,11 +7,11 @@ module SQLKnit
       @sql_from   = SQL::From.new
     end
 
-    def sql_select &block
+    def select &block
       @sql_select.instance_eval &block
     end
 
-    def sql_from *table_names, &block
+    def from *table_names, &block
       table_names[0..-2].each {|table_name| @sql_from.add_table table_name }
       @sql_from.contextlize table_names.last, &block
     end
