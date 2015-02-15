@@ -1,6 +1,6 @@
 module SQLKnit
   
-  class Needle
+  class Builder
 
     def initialize
       @sql_select = SQL::Select.new
@@ -8,7 +8,8 @@ module SQLKnit
     end
 
     def select &block
-      @sql_select.instance_eval &block
+      @sql_select.instance_eval &block if block_given?
+      @sql_select
     end
 
     def from *table_names, &block

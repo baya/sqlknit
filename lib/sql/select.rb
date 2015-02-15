@@ -18,13 +18,18 @@ module SQLKnit
 
       private
       
-      def method_missing table_name, as_mapper
+      def method_missing relation_name, *args
 
-        create_method table_name do |as_mapper|
-          as_mapper.each {|col, as_col|  text "#{table_name}.#{col} as #{as_col}"}
+        create_method relation_name do |*args|
+          as_mapper = args.last
+          if as_mapper.is_a? Hash
+            as_mapper.each {|col, as_col|  text "#{relation_name}.#{col} as #{as_col}"}
+          else
+            args.each {|col| text "#{relation_name}.#{col}"}
+          end
         end
 
-        send table_name, as_mapper
+        send relation_name, *args
       end
 
       def create_method name, &block
