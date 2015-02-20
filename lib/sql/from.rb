@@ -2,20 +2,34 @@ module SQLKnit
   module SQL
     class From
 
-      attr_reader :statement_chains, :current_chain, :current_table_name
+      attr_reader :statement_chains
       attr_reader :current_join_type
       
       def initialize
-        @statement_chains = Hash.new {|hash, key| hash[key] = []}
+        @statement_chains = []
       end
 
-      def contextlize table_name, &block
-        switch_to table_name
+      def contextlize args, &block
+        parse_args args
         instance_eval &block if block_given?
       end
 
       def text str
         statement_chains << str if not statement_chains.include? str
+      end
+
+      def parse_args args
+        args.each {|relation_name|
+          if relation_name.is_a? Hash
+            parse_alias_relation relation_name
+          else
+            text relation_name
+          end
+        }
+      end
+
+      def parse_alias_relation relation_name
+        relation_name.each {|k, v| text [k, v].join(' ') }
       end
       
       def join table_name
@@ -48,36 +62,8 @@ module SQLKnit
         join table_names
       end
 
-      def pairelize_table_names table_names
-        last_index = table_names.length - 1
-        (0..(last_index-1)).map {|i| table_names[i..i+1] }
-      end
-
       def to_statement
-        statement = statement_chains.map {|table_name, joins|
-          if joins.size > 0
-          "#{table_name} #{joins.map(&:to_statement).join("\n")}"
-          else
-            table_name.to_s
-          end
-        }.join(",\n")
-
-        ["from", statement].join(" ")
-      end
-
-      def add_table table_name
-        statement_chains[table_name] if not statement_chains.has_key? table_name
-      end
-
-      private
-
-      def switch_join_type type
-        @current_join_type = type
-      end
-      
-      def switch_to table_name
-        @current_table_name = table_name
-        @current_chain = @statement_chains[table_name]
+        ["from", statement_chains.join(",\n")].join(" ")
       end
 
     end

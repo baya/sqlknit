@@ -13,7 +13,7 @@ module SQLKnit
       end
 
       def to_statement
-        "select #{statement_chains.join(",\n")}"
+        ["select", statement_chains.join(",\n")].join(" ")
       end
 
       private
