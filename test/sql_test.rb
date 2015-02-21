@@ -61,11 +61,20 @@ class SqlTest < MiniTest::Test
       
     end
 
+    @sql.order do
+      t1 :distributor_id, 'desc'
+      t2 :order_id, :customer_id
+    end
+
     puts @sql.select_statement
 
     puts @sql.from_statement
 
     puts @sql.where_statement
+
+    puts @sql.order_statement
+
+    puts @sql
   end
   
 end
