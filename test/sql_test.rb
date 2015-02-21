@@ -42,18 +42,21 @@ class SqlTest < MiniTest::Test
     addresses: 't4',
     countries: 't5'
 
+    query_params = {lookup_distributor_id: 1000876}
+
     @sql.where do
-      
-      cond '>=' do
-        pair 't1.current_month', quote('2015-02-01')
-        pair 't3.entry_date', quote('2015-02-01')
-      end
+
+       cond '>=' do
+         t1 :current_month, "2015-02-01"
+         t3 :entry_date, "2015-02-01"
+       end
 
       cond '=' do
-        pair 't1.distributor_id', 't2.id'
-        pair 't2.user_id', 't3.id'
-        pair 't3.sold_address_id', 't4.id'
-        pair 't4.country_id', 't5.id'
+        t1 :distributor_id, t2: 'id'
+        t2 :user_id, t3: 'id'
+        t3 :sold_address_id, t4: 'id'
+        t4 :country_id, t5: 'id'
+        t1 :distributor_id, query_params[:lookup_distributor_id]
       end
       
     end
