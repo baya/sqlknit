@@ -39,11 +39,24 @@ module SQLKnit
       def left_join &block
         join = Join.new type: 'left'
         join.instance_eval &block if block_given?
-        text join.to_statement
+        statement_chains.last << "\n" << join.to_statement
       end
       
       def to_statement
         ["from", statement_chains.join(",\n")].join(" ")
+      end
+
+      def create_method name, &block
+        self.class.send :define_method, name, &block
+      end
+
+      def method_missing relation_name, *args
+        create_method relation_name do |*args|
+          aname = args.first
+          text [relation_name, aname].compact.join(' ')
+        end
+
+        send relation_name, *args
       end
 
     end

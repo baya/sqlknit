@@ -24,6 +24,7 @@ module SQLKnit
         args.each {|arg|
           statement = statement.sub(/\?/, arg.to_s)
         }
+        statement = [name, statement].join(' ')
         statement_chains << statement if not statement_chains.include? statement
       end
 
@@ -47,7 +48,7 @@ module SQLKnit
             on = parse_on relation_name, conditions
           end
 
-          text [name, relation_name, aname, "on", "(#{on})"].compact.join(' ')
+          text [relation_name, aname, "on", "(#{on})"].compact.join(' ')
         end
 
         send relation_name, *args
