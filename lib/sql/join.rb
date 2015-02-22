@@ -2,39 +2,66 @@ module SQLKnit
   module SQL
     class Join
 
-      TableAbbrSymbol = ':'
-
-      attr_reader :head_table_name, :join_table_name, :on_table_name
-      attr_reader :type
-      attr_reader :on_conditions
-      attr_reader :statement_chains
+      RelationAbbrSymbol = ':'
+      ValidTypes = ['right', 'left', 'inner', 'full']
+   
+      attr_reader :statement_chains, :type, :name
       
-      def initialize head_table_name, table_name, opts = {}
-        @head_table_name = head_table_name
-        @join_table_name = table_name
-        @on_conditions = []
-        @type = opts[:type] || 'join'
+      def initialize opts = {}
+        type = opts[:type]
+        @type = type.nil? ? 'inner' : type.downcase
+        validate_type
         @statement_chains = []
+        @name = [type, 'join'].join(' ')
       end
 
-      def on text = nil, &block
+      def validate_type
+        raise "Invalid join type: #{type}" if not ValidTypes.include?(type)
+      end
 
-        if text.include? TableAbbrSymbol
-          join_text = text.gsub(TableAbbrSymbol, join_table_name.to_s)
-        else
-          join_text = text
-        end
-        
-        on_condition = OnCondition.new join_table_name
-        on_condition.add_text join_text
-        
-        on_conditions << on_condition
-        on_condition.instance_eval &block if block_given?
+      def text str, *args
+        statement = str
+        args.each {|arg|
+          statement = statement.sub(/\?/, arg.to_s)
+        }
+        statement_chains << statement if not statement_chains.include? statement
       end
 
       def to_statement
-        statement = on_conditions.map(&:to_statement).join("\n")
-        [type, statement].join(" ")
+        statement_chains.join("\n")
+      end
+
+      private
+      
+      def method_missing relation_name, *args
+        create_method relation_name do |*args|
+          if args.size > 1
+            aname, conditions = args
+          else
+            conditions = args.last
+          end
+
+          if aname
+            on = parse_on aname, conditions
+          else
+            on = parse_on relation_name, conditions
+          end
+
+          text [name, relation_name, aname, "on", "(#{on})"].compact.join(' ')
+        end
+
+        send relation_name, *args
+      end
+
+      def parse_on relation_name, conditions
+        on = conditions[:on]
+        if on.is_a? String
+          on.sub(":.", "#{relation_name}.")
+        end
+      end
+
+      def create_method name, &block
+        self.class.send :define_method, name, &block
       end
 
     end
