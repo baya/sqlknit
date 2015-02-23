@@ -45,7 +45,11 @@ module SQLKnit
         else
           chains = statement_chains
         end
-        ["where", chains.join("\n")].join(" ")
+        if chains.length > 0
+          ["where", chains.join("\n")].join(" ")
+        else
+          ''
+        end
       end
 
       private

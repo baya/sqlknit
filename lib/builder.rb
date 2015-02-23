@@ -9,8 +9,8 @@ module SQLKnit
       @sql_order  = SQL::Order.new
     end
 
-    def select &block
-      @sql_select.instance_eval &block if block_given?
+    def select *args, &block
+      @sql_select.contextlize args, &block
       self
     end
 
@@ -24,8 +24,8 @@ module SQLKnit
       self
     end
 
-    def order &block
-      @sql_order.instance_eval &block if block_given?
+    def order *args, &block
+      @sql_order.contextlize args, &block
       self
     end
 
@@ -50,7 +50,7 @@ module SQLKnit
        from_statement,
        where_statement,
        order_statement
-      ].join("\n")
+      ].compact.delete_if(&:empty?).join("\n")
     end
 
   end

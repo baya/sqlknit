@@ -10,6 +10,15 @@ module SQLKnit
         @statement_chains = []
       end
 
+      def contextlize args, &block
+        parse_args args
+        instance_eval &block if block_given?
+      end
+
+      def parse_args args
+        args.each {|col| text col }
+      end
+
       def method_missing relation_name, *args
         create_method relation_name do |*args|
           order_word = args.last.upcase
@@ -40,8 +49,12 @@ module SQLKnit
         [double_quote(relation_name), double_quote(col)].join(".")
       end
 
-      def text str
-        statement_chains << str if not statement_chains.include? str
+      def text str, *args
+        statement = str
+        args.each {|arg|
+          statement = statement.sub(/\?/, arg.to_s)
+        }
+        statement_chains << statement if not statement_chains.include? statement
       end
 
       def double_quote value
