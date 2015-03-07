@@ -34,15 +34,17 @@ module SQLKnit
       def method_missing relation_name, *args
 
         create_method relation_name do |*args|
-          mapper = args.last
-          if mapper.is_a? Hash
-            mapper.each {|col, as_col|
-              relation_col = build_relation_col relation_name, col
-              text "#{relation_col} #{as_col}"
-            }
-          else
-            args.each {|col| text build_relation_col(relation_name, col) }
-          end
+          args.each {|arg|
+            if arg.is_a? Hash
+              arg.each {|col, as_col|
+                relation_col = build_relation_col relation_name, col
+                text "#{relation_col} as #{as_col}"
+              }
+            else
+              relation_col = build_relation_col relation_name, arg
+              text "#{relation_col} as #{arg}"
+            end
+          }
         end
 
         send relation_name, *args
@@ -57,7 +59,7 @@ module SQLKnit
       end
 
       def build_relation_col relation_name, col
-        [double_quote(relation_name), double_quote(col)].join(".")
+        [relation_name, col].join(".")
       end
 
     end

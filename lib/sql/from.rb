@@ -36,6 +36,14 @@ module SQLKnit
         relation_name.each {|k, v| text [k, v].join(' ') }
       end
 
+      def join *args, &block
+        relation_name, condition = args
+        if condition
+          text ['join', relation_name, 'on', condition[:on]].join(' ')
+        end
+        if block_given?
+      end
+
       def left_join &block
         join = Join.new type: 'left'
         join.instance_eval &block if block_given?
@@ -43,7 +51,9 @@ module SQLKnit
       end
       
       def to_statement
-        ["from", statement_chains.join(",\n")].join(" ")
+        if statement_chains.length > 0
+          ["from", statement_chains.join(",\n")].join(" ")
+        end
       end
 
       def create_method name, &block
