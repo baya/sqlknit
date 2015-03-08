@@ -49,6 +49,8 @@ SqlKnit is a SQL builder.
 
 ```
 
+will outupt:
+
 ```sql
 select shipments.number as shipment_number,
 variants.sku as sku,
