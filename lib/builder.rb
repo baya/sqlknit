@@ -34,11 +34,11 @@ module SQLKnit
     end
 
     def from_statement
-      @sql_from.to_statement
+      @sql_from.to_s
     end
 
     def where_statement
-      @sql_where.to_statement
+      @sql_where.to_s
     end
 
     def order_statement

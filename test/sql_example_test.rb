@@ -41,7 +41,24 @@ order by Name ASC"
       end
     end
 
-    puts "+++++++++++#{@sql.to_s}"
+    begin_date = '2012-10-01'
+    end_date = '2015-03-08'
+    warehouse_id = 28
+    @sql.where do
+      orders state: 'complete',
+      shipment_state: 'ready'
+      
+      con '>=' do
+        state_events created_at: begin_date
+      end
+      con '<=' do
+        state_events created_at: end_date
+      end
+      
+      shipments warehouse_id: warehouse_id
+    end
+
+    puts @sql
   end
 
 end
