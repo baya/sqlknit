@@ -1,6 +1,10 @@
+# SqlKnit
+
+SqlKnit is a SQL builder.
+
 ## Example
 
-## 001
+### 001
 
 ```ruby
     @sql = SQLKnit::Builder.new
