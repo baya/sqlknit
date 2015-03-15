@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'test_helper'
 
+# examples at https://msdn.microsoft.com/en-us/library/ms187731.aspx
 class SqlExampleTest < MiniTest::Test
 
   def setup
@@ -16,6 +17,17 @@ order by Name ASC"
     @sql.select('*').from('Production.Product').order('Name ASC')
 
     assert_equal @sql.to_s, target_sql
+  end
+
+  # bundle exe ruby -Itest test/sql_example_test.rb -n test_002
+  def test_002
+    target_sql = ""
+
+    @sql.select("p.*").from do
+      rel "Production.Product", "p"
+    end.order "Name ASC"
+
+    puts @sql
   end
 
 end
