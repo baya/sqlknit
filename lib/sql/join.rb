@@ -2,63 +2,41 @@ module SQLKnit
   module SQL
     class Join
 
-      RelationAbbrSymbol = ':'
-      ValidTypes = ['right', 'left', 'inner', 'full']
-   
-      attr_reader :statement_chains, :type, :name
+      EnumList = Data::EnumList
+
+      attr_reader :relation, :condition
       
-      def initialize opts = {}
-        type = opts[:type]
-        @type = type.nil? ? 'inner' : type.downcase
-        validate_type
-        @statement_chains = []
-        @name = [type, 'join'].join(' ')
-      end
-
-      def validate_type
-        raise "Invalid join type: #{type}" if not ValidTypes.include?(type)
-      end
-
-      def text str, *args
-        statement = str
-        args.each {|arg|
-          statement = statement.sub(/\?/, arg.to_s)
-        }
-        statement = [name, statement].join(' ')
-        statement_chains << statement if not statement_chains.include? statement
+      def initialize relation, opts = {}, &block
+        @relation = relation
+        @condition = opts[:on]
+        instance_eval &block if block_given?
       end
 
       def to_statement
-        statement_chains.join("\n")
+        JoinStatement.new relation, condition
       end
 
       private
       
-      def method_missing relation_name, *args
-        create_method relation_name do |*args|
-          if args.size > 1
-            aname, conditions = args
-          else
-            conditions = args.last
-          end
-
-          if aname
-            on = parse_on aname, conditions
-          else
-            on = parse_on relation_name, conditions
-          end
-
-          text [relation_name, aname, "on", "(#{on})"].compact.join(' ')
+      def method_missing relation, condition_mapper
+        create_method relation do |condition_mapper|
+          @condition = condition_mapper.map {|k, v|
+            col = "#{relation}.#{k}"
+            op = '='
+            
+            if v.is_a? Symbol
+            elsif v.is_a? Enumerable
+              v = EnumList.new v
+              op = 'in'
+            else
+              v = "'#{v}'"
+            end
+            
+            [col, op, v].join(' ')
+          }.join(' and ')
         end
 
-        send relation_name, *args
-      end
-
-      def parse_on relation_name, conditions
-        on = conditions[:on]
-        if on.is_a? String
-          on.sub(":.", "#{relation_name}.")
-        end
+        send relation, condition_mapper
       end
 
       def create_method name, &block

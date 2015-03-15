@@ -2,83 +2,57 @@ module SQLKnit
   module SQL
     class Where
 
-      CONJ_WORDS = ['AND', 'OR']
-
-      attr_reader :statement_chains
-      attr_reader :op, :conjunction
+      EnumList = Data::EnumList
+      Condition = Data::Condition
+      
+      attr_reader :conditions, :op, :conj
 
       def initialize
-        @statement_chains = []
-        @conjunction = 'AND'
+        @conditions = []
+        @op = '='
+        @conj = 'and'
       end
 
-      def cond op, &block
+      def con op, &block
         @op = op
-        instance_eval &block
+        instance_eval &block if block_given?
+        @op = '='
       end
 
-      def AND
-        @conjunction = 'AND'
-      end
-
-      def OR
-        @conjunction = 'OR'
-      end
-
-      def quote value
-        "'#{value}'"
-      end
-
-      def double_quote value
-        "\"#{value}\""
-      end
-
-      def text str
-        if not statement_chains.include?(str) or CONJ_WORDS.include?(str)
-          statement_chains << str 
-        end
-      end
-
-      def to_statement
-        if CONJ_WORDS.include? statement_chains.last
-          chains = statement_chains[0..-2]
-        else
-          chains = statement_chains
-        end
-        if chains.length > 0
-          ["where", chains.join("\n")].join(" ")
-        else
-          ''
-        end
+      def to_s
+        ['where', conditions.last.to_s].join(' ')
       end
 
       private
 
-      def method_missing relation_name, *args
-        create_method relation_name do |*args|
-          col, mapper = args
-          l_relation_col = build_relation_col relation_name, col
-          
-          if mapper.is_a? Hash
-            relation_col = mapper.map {|k, v| build_relation_col k, v }.join
-            text "#{l_relation_col} #{op} #{relation_col}"
-          else
-            if mapper.is_a? String
-              text "#{l_relation_col} #{op} #{quote mapper}"
+      def method_missing relation, condition_mapper, &block
+        create_method relation do |condition_mapper|
+          condition_mapper.each {|k, v|
+            left = "#{relation}.#{k}"
+            
+            if v.is_a? Symbol
+              right = v
+            elsif v.is_a? Enumerable
+              right = EnumList.new v
+            elsif v.is_a? Numeric
+              right = v
             else
-              text "#{l_relation_col} #{op} #{mapper}"
+              right = "'#{v}'"
             end
-          end
-          text conjunction
+
+            condition = Condition.new left, op, right
+            if conditions.empty?
+              conditions << condition
+            else
+              conditions << conditions.last.send(conj, condition)
+            end  
+            
+          }
         end
 
-        send relation_name, *args
+        send relation, condition_mapper
       end
-
-      def build_relation_col relation_name, col
-        [double_quote(relation_name), double_quote(col)].join(".")
-      end
-
+      
       def create_method name, &block
         self.class.send :define_method, name, &block
       end

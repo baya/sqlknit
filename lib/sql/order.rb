@@ -38,7 +38,9 @@ module SQLKnit
       end
 
       def to_statement
-        ["order by", statement_chains.join(",")].join(" ")
+        if statement_chains.length > 0
+          ["order by", statement_chains.join(",")].join(" ")
+        end
       end
 
       def create_method name, &block
