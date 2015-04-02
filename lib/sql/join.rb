@@ -4,16 +4,17 @@ module SQLKnit
 
       EnumList = Data::EnumList
 
-      attr_reader :relation, :condition
+      attr_reader :type, :relation, :condition
       
-      def initialize relation, opts = {}, &block
+      def initialize type, relation, opts = {}, &block
+        @type = type
         @relation = relation
         @condition = opts[:on]
         instance_eval &block if block_given?
       end
 
       def to_statement
-        JoinStatement.new relation, condition
+        JoinStatement.new type, relation, condition
       end
 
       private

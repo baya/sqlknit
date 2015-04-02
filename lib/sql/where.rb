@@ -20,7 +20,9 @@ module SQLKnit
       end
 
       def to_s
-        ['where', conditions.last.to_s].join(' ')
+        if conditions.size > 0
+          ['where', conditions.last.to_s].join(' ')
+        end
       end
 
       private

@@ -8,16 +8,37 @@ module SQLKnit
         @statements = []
       end
 
-      def contextlize args, &block
+      def contextlize(args, &block)
         args.each {|relation|
-          statement = FromStatement.new relation
-          @statements << statement
+          if relation.is_a?(Hash)
+            relation.each {|k, v|
+              statement = FromStatement.new("#{k} #{v}")
+              @statements << statement
+            }
+          else
+            statement = FromStatement.new(relation)
+            @statements << statement
+          end
+          
         }
         instance_eval &block if block_given?
       end
 
-      def join *args, &block
-        join = Join.new *args, &block
+      def join(relation, opt={}, &block)
+        join = Join.new(nil, relation, opt, &block)
+        statement = statements.last
+        if statement
+          statement.add join.to_statement
+        end
+      end
+
+      def left_join(relation, opt={}, &block)
+        if relation.is_a?(Hash)
+          opt = {}
+          opt[:on] = relation.delete(:on)
+        end
+        
+        join = Join.new('left', relation, opt, &block)
         statement = statements.last
         if statement
           statement.add join.to_statement
